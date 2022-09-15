@@ -1,0 +1,50 @@
+[version] .0
+# [default] NUMBER_FORMAT "F2"
+
+[relative]("Document-Invoice")
+Faktura
+	[attr] xmlns:etd "http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2021/06/09/eD/DefinicjeTypy/"
+	[attr] xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance"
+	[attr] xmlns "http://crd.gov.pl/wzor/2021/11/29/11089/"
+	Naglowek
+		KodFormularza "FA"
+			[attr] kodSystemowy "FA (1)"
+			[attr] wersjaSchemy "1-0E"
+		WariantFormularza "1"
+		DataWytworzeniaFa |DATE(:"./Invoice-Header/InvoiceDate" "yyyy-MM-ddTHH:mm:ssZ")
+		SystemInfo "AstraFox Connector"
+	[relative]("./Invoice-Parties/Seller")
+	Podmiot1
+        PrefiksPodatnika :"./Country"
+		DaneIdentyfikacyjne
+			NIP :"./TaxID"
+			PelnaNazwa :"./Name"
+		Adres
+			|IF(|_EQ("PL" :"./Country") "AdresPol" "AdresZagr")
+				KodKraju :"./Country"
+				Ulica |SPLIT_AND_REMOVE(:"./StreetAndNumber" " " "-1")
+				NrDomu |SPLIT_AND_TAKE(:"./StreetAndNumber" " " "-1")
+				Miejscowosc :"./CityName"
+				KodPocztowy :"./PostalCode"
+	# Hmm, skomplikowanie interpretera pozwalałoby na sparametryzowanie nazw elementów i mapowanie Podmiot1 i Podmiot2 przy pomocy tego samego node'a
+	[relative]("./Invoice-Parties/Buyer")
+	Podmiot2
+        PrefiksNabywcy :"./Country"
+		DaneIdentyfikacyjne
+			NIP :"./TaxID"
+			PelnaNazwa :"./Name"
+		Adres
+			|IF(|_EQ("PL" :"./Country") "AdresPol" "AdresZagr")
+				KodKraju :"./Country"
+				Ulica |SPLIT_AND_REMOVE(:"./StreetAndNumber" " " "-1")
+				NrDomu |SPLIT_AND_TAKE(:"./StreetAndNumber" " " "-1")
+				Miejscowosc :"./CityName"
+				KodPocztowy :"./PostalCode"
+	Fa
+		KodWaluty :"./Invoice-Header/InvoiceCurrency"
+		P_1 :"./Invoice-Header/InvoiceDate"
+		FaWiersze
+			[list]("./Invoice-Lines/Line") FaWiersz
+				P_8B :"./Invoice-Lines/Line/Line-Item/DeliveredQuantity"
+				P_11A |SUM()
+
